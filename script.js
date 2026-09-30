@@ -3,13 +3,15 @@ let teams = {
     name: "",
     captain: "",
     score: 0,
-    card: null
+    card: null,
+    players: []
   },
   2: {
     name: "",
     captain: "",
     score: 0,
-    card: null
+    card: null,
+    players: []
   }
 };
 
@@ -18,7 +20,7 @@ let game = {
   running: false,
   interval: null,
   phase: "",
-  players: 1,
+  players: 5,
   dice: null
 };
 
@@ -39,7 +41,7 @@ let cards = [
   },
   {
     name: "ركلات ترجيح",
-    description: "تفعيل ركلات ترجيح"
+    description: "تفعيل ركلات الترجيح"
   },
   {
     name: "الجوكر",
@@ -68,24 +70,61 @@ let shootout = {
   score2: 0
 };
 
+let matchball = {
+  players: 5,
+  active: false
+};
+
 
 /* =========================
-   التنقل بين الصفحات
+   التنقل
 ========================= */
 
 function showScreen(id) {
 
-  document
-    .querySelectorAll(".screen")
-    .forEach(screen => {
-      screen.classList.remove("active");
-    });
+  document.querySelectorAll(".screen").forEach(screen => {
+    screen.classList.remove("active");
+  });
 
-  const target =
-    document.getElementById(id);
+  const target = document.getElementById(id);
 
   if (target) {
     target.classList.add("active");
+  }
+}
+
+
+/* =========================
+   إنشاء أسماء اللاعبين
+========================= */
+
+function createPlayerInputs(team) {
+
+  const count =
+    Number(document.getElementById(`playerCount${team}`).value);
+
+  const box =
+    document.getElementById(`playersInputs${team}`);
+
+  box.innerHTML = "";
+
+  for (let i = 1; i <= count; i++) {
+
+    const wrapper =
+      document.createElement("div");
+
+    wrapper.className = "player-input-row";
+
+    wrapper.innerHTML = `
+      <span>${i}</span>
+      <input
+        id="player${team}_${i}"
+        type="text"
+        placeholder="اسم اللاعب ${i}"
+      >
+    `;
+
+    box.appendChild(wrapper);
   }
 }
 
@@ -112,6 +151,57 @@ function startCards() {
     document.getElementById("captain2").value.trim()
     || "الرئيس الثاني";
 
+
+  const count1 =
+    Number(document.getElementById("playerCount1").value);
+
+  const count2 =
+    Number(document.getElementById("playerCount2").value);
+
+
+  teams[1].players = [];
+
+  teams[2].players = [];
+
+
+  for (let i = 1; i <= count1; i++) {
+
+    const input =
+      document.getElementById(`player1_${i}`);
+
+    const name =
+      input && input.value.trim()
+        ? input.value.trim()
+        : `لاعب ${i}`;
+
+    teams[1].players.push({
+      name,
+      goalkeeper: false,
+      active: true,
+      penalty: null
+    });
+  }
+
+
+  for (let i = 1; i <= count2; i++) {
+
+    const input =
+      document.getElementById(`player2_${i}`);
+
+    const name =
+      input && input.value.trim()
+        ? input.value.trim()
+        : `لاعب ${i}`;
+
+    teams[2].players.push({
+      name,
+      goalkeeper: false,
+      active: true,
+      penalty: null
+    });
+  }
+
+
   document.getElementById("cardTeam1").textContent =
     teams[1].name;
 
@@ -137,7 +227,7 @@ function startCards() {
 
 
 /* =========================
-   سحب البطاقة العشوائية
+   البطاقة السرية
 ========================= */
 
 function drawSecretCard(team) {
@@ -156,21 +246,25 @@ function drawSecretCard(team) {
 
   cardDrawn[team] = true;
 
-  const result =
-    document.getElementById(`result${team}`);
+  document.getElementById(`draw${team}`).disabled = true;
 
-  result.innerHTML = `
-    <strong>${card.name}</strong>
-    <small>${card.description}</small>
-  `;
-
-  document.getElementById(`draw${team}`).disabled =
-    true;
+  showSecretCard(card);
 
   if (cardDrawn[1] && cardDrawn[2]) {
-    document.getElementById("continueToMatch").disabled =
-      false;
+    document.getElementById("continueToMatch").disabled = false;
   }
+}
+
+
+function showSecretCard(card) {
+
+  document.getElementById("secretCardName").textContent =
+    card.name;
+
+  document.getElementById("secretCardDescription").textContent =
+    card.description;
+
+  document.getElementById("secretOverlay").classList.add("show");
 }
 
 
@@ -198,32 +292,49 @@ function startMatch() {
   document.getElementById("soTeam2").textContent =
     teams[2].name;
 
+  document.getElementById("liveTeamName1").textContent =
+    teams[1].name;
+
+  document.getElementById("liveTeamName2").textContent =
+    teams[2].name;
+
+
   teams[1].score = 0;
   teams[2].score = 0;
 
+  teams[1].players.forEach(player => {
+    player.active = true;
+    player.penalty = null;
+  });
+
+  teams[2].players.forEach(player => {
+    player.active = true;
+    player.penalty = null;
+  });
+
+
   game.seconds = 0;
   game.dice = null;
-  game.players = 1;
+  game.players = 5;
 
   penalties = [];
 
   updateScoreboard();
-  updatePenalties();
   updateTimer();
   updatePhase();
+  updateLivePlayers();
+  updatePenalties();
 
   document.getElementById("events").innerHTML = "";
 
-  addEvent(
-    "📣 المباراة جاهزة للانطلاق"
-  );
+  addEvent("📣 المباراة جاهزة للانطلاق");
 
   showScreen("match");
 }
 
 
 /* =========================
-   الوقت
+   المؤقت
 ========================= */
 
 function toggleTimer() {
@@ -250,18 +361,16 @@ function startTimer() {
   document.getElementById("timerButton").textContent =
     "⏸ إيقاف المباراة";
 
-  game.interval =
-    setInterval(() => {
+  game.interval = setInterval(() => {
 
-      game.seconds++;
+    game.seconds++;
 
-      updateTimer();
-      updatePhase();
-      updatePenalties();
+    updateTimer();
+    updatePhase();
+    updatePenalties();
+    checkAutomaticPhases();
 
-      checkAutomaticPhases();
-
-    }, 1000);
+  }, 1000);
 }
 
 
@@ -304,14 +413,23 @@ function updatePhase() {
     Math.floor(game.seconds / 60);
 
   let phase = "";
-  let players = 1;
+  let players = 5;
 
   if (minute < 5) {
 
     phase = "تصعيد اللاعبين";
 
+    const maxPlayers =
+      Math.max(
+        teams[1].players.length,
+        teams[2].players.length
+      );
+
     players =
-      Math.min(1 + minute, 6);
+      Math.min(
+        1 + minute,
+        maxPlayers
+      );
 
   } else if (minute < 17) {
 
@@ -351,38 +469,92 @@ function updatePhase() {
   document.getElementById("phase").textContent =
     phase;
 
+  updateLivePlayers();
+
   document.getElementById("players").textContent =
-    `${players} + حارس ضد ${players} + حارس`;
+    `${countActivePlayers(1)} لاعبين + حارس ضد ${countActivePlayers(2)} لاعبين + حارس`;
 }
 
 
 /* =========================
-   انتقالات المراحل
+   عدد اللاعبين
+========================= */
+
+function countActivePlayers(team) {
+
+  return teams[team].players.filter(
+    player => player.active
+  ).length;
+}
+
+
+function updateLivePlayers() {
+
+  for (let team = 1; team <= 2; team++) {
+
+    const box =
+      document.getElementById(`livePlayers${team}`);
+
+    if (!box) {
+      continue;
+    }
+
+    box.innerHTML = "";
+
+    teams[team].players.forEach(player => {
+
+      const item =
+        document.createElement("div");
+
+      item.className =
+        "live-player";
+
+      if (!player.active) {
+        item.classList.add("player-out");
+      }
+
+      let icon = "🟢";
+
+      if (player.penalty === "yellow") {
+        icon = "🟨";
+      }
+
+      if (player.penalty === "red") {
+        icon = "🟥";
+      }
+
+      item.innerHTML = `
+        <span>${icon}</span>
+        <strong>${player.name}</strong>
+        ${player.goalkeeper ? "<small>حارس</small>" : ""}
+      `;
+
+      box.appendChild(item);
+    });
+  }
+}
+
+
+/* =========================
+   انتقال المراحل
 ========================= */
 
 function checkAutomaticPhases() {
 
-  const minute =
-    Math.floor(game.seconds / 60);
-
   if (
-    minute === 20 &&
-    game.seconds % 60 === 0
+    game.seconds === 20 * 60
   ) {
 
     pauseTimer();
 
-    addEvent(
-      "🎲 بدأت مرحلة النرد"
-    );
+    addEvent("🎲 بدأت مرحلة النرد");
 
-    rollDice();
+    updatePhase();
   }
 
 
   if (
-    minute === 36 &&
-    game.seconds % 60 === 0
+    game.seconds === 36 * 60
   ) {
 
     pauseTimer();
@@ -407,6 +579,99 @@ function checkAutomaticPhases() {
       startMatchball();
     }
   }
+}
+
+
+/* =========================
+   تسجيل الهدف
+========================= */
+
+function goalMenu(team) {
+
+  if (game.phase === "النهاية") {
+    return;
+  }
+
+  const activePlayers =
+    teams[team].players.filter(
+      player => player.active
+    );
+
+  if (activePlayers.length === 0) {
+    alert("لا يوجد لاعب متاح من هذا الفريق.");
+    return;
+  }
+
+  document.getElementById("playerOverlayTitle").textContent =
+    `من سجل الهدف؟ — ${teams[team].name}`;
+
+  const choices =
+    document.getElementById("playerChoices");
+
+  choices.innerHTML = "";
+
+  activePlayers.forEach(player => {
+
+    const button =
+      document.createElement("button");
+
+    button.type = "button";
+
+    button.textContent =
+      player.name;
+
+    button.onclick = () => {
+      registerGoal(team, player.name);
+    };
+
+    choices.appendChild(button);
+  });
+
+  document.getElementById("playerOverlay").classList.add("show");
+}
+
+
+function registerGoal(team, playerName) {
+
+  closeOverlay("playerOverlay");
+
+  let value = 1;
+
+  if (game.phase === "الأهداف مضاعفة ×2") {
+    value = 2;
+  }
+
+  teams[team].score += value;
+
+  addEvent(
+    value === 2
+      ? `⚽⚽ ${playerName} سجل — هدفان`
+      : `⚽ ${playerName} سجل لـ ${teams[team].name}`
+  );
+
+  updateScoreboard();
+
+  showGoalOverlay(
+    team,
+    playerName,
+    value
+  );
+}
+
+
+function showGoalOverlay(team, playerName, value) {
+
+  document.getElementById("goalScorer").textContent =
+    playerName;
+
+  document.getElementById("goalTeam").textContent =
+    value === 2
+      ? `${teams[team].name} — هدفان ×2`
+      : teams[team].name;
+
+  document.getElementById("goalOverlay").classList.add("show");
+
+  playGoalSound();
 }
 
 
@@ -476,7 +741,7 @@ function updateScoreboard() {
 
 
 /* =========================
-   الأحداث
+   سجل المباراة
 ========================= */
 
 function addEvent(text) {
@@ -493,17 +758,137 @@ function addEvent(text) {
 
   event.className = "event";
 
-  event.textContent = text;
+  event.textContent =
+    `${formatTime(game.seconds)} — ${text}`;
 
   box.prepend(event);
 }
 
 
+function formatTime(seconds) {
+
+  const minutes =
+    Math.floor(seconds / 60);
+
+  const secs =
+    seconds % 60;
+
+  return (
+    String(minutes).padStart(2, "0")
+    + ":"
+    + String(secs).padStart(2, "0")
+  );
+}
+
+
 /* =========================
-   الصافرة
+   الصافرة المحسنة
 ========================= */
 
+let whistleAudio = null;
+
+
 function playWhistle() {
+
+  try {
+
+    const AudioContext =
+      window.AudioContext ||
+      window.webkitAudioContext;
+
+    if (!whistleAudio) {
+      whistleAudio = new AudioContext();
+    }
+
+    const audio = whistleAudio;
+
+    if (audio.state === "suspended") {
+      audio.resume();
+    }
+
+
+    const now =
+      audio.currentTime;
+
+
+    const master =
+      audio.createGain();
+
+    master.gain.setValueAtTime(
+      0.0001,
+      now
+    );
+
+    master.gain.exponentialRampToValueAtTime(
+      0.65,
+      now + 0.025
+    );
+
+    master.gain.exponentialRampToValueAtTime(
+      0.0001,
+      now + 0.65
+    );
+
+    master.connect(audio.destination);
+
+
+    const osc1 =
+      audio.createOscillator();
+
+    const osc2 =
+      audio.createOscillator();
+
+
+    osc1.type = "triangle";
+    osc2.type = "sine";
+
+
+    osc1.frequency.setValueAtTime(
+      3300,
+      now
+    );
+
+    osc1.frequency.exponentialRampToValueAtTime(
+      2200,
+      now + 0.65
+    );
+
+
+    osc2.frequency.setValueAtTime(
+      3600,
+      now
+    );
+
+    osc2.frequency.exponentialRampToValueAtTime(
+      2400,
+      now + 0.65
+    );
+
+
+    osc1.connect(master);
+    osc2.connect(master);
+
+    osc1.start(now);
+    osc2.start(now);
+
+    osc1.stop(now + 0.65);
+    osc2.stop(now + 0.65);
+
+
+    addEvent("📣 صافرة الحكم");
+
+  } catch (error) {
+
+    addEvent("📣 صافرة");
+  }
+}
+
+
+/* =========================
+   صوت الهدف
+========================= */
+
+function playGoalSound() {
 
   try {
 
@@ -514,56 +899,55 @@ function playWhistle() {
     const audio =
       new AudioContext();
 
-    const oscillator =
-      audio.createOscillator();
+    const now =
+      audio.currentTime;
 
     const gain =
       audio.createGain();
 
-    oscillator.type = "sine";
-
-    oscillator.frequency.setValueAtTime(
-      2600,
-      audio.currentTime
-    );
-
-    oscillator.frequency.exponentialRampToValueAtTime(
-      1400,
-      audio.currentTime + 0.35
-    );
-
     gain.gain.setValueAtTime(
       0.0001,
-      audio.currentTime
+      now
     );
 
     gain.gain.exponentialRampToValueAtTime(
-      0.5,
-      audio.currentTime + 0.02
+      0.25,
+      now + 0.03
     );
 
     gain.gain.exponentialRampToValueAtTime(
       0.0001,
-      audio.currentTime + 0.4
+      now + 0.8
     );
 
-    oscillator.connect(gain);
     gain.connect(audio.destination);
 
-    oscillator.start();
+    const osc =
+      audio.createOscillator();
 
-    oscillator.stop(
-      audio.currentTime + 0.4
+    osc.type = "triangle";
+
+    osc.frequency.setValueAtTime(
+      500,
+      now
     );
 
-  } catch (error) {
-
-    addEvent(
-      "📣 تم الضغط على الصافرة"
+    osc.frequency.exponentialRampToValueAtTime(
+      900,
+      now + 0.2
     );
-  }
 
-  addEvent("📣 صافرة");
+    osc.frequency.exponentialRampToValueAtTime(
+      1200,
+      now + 0.5
+    );
+
+    osc.connect(gain);
+
+    osc.start(now);
+    osc.stop(now + 0.8);
+
+  } catch (error) {}
 }
 
 
@@ -596,13 +980,13 @@ function rollDice() {
   updatePhase();
 
   addEvent(
-    `🎲 نتيجة النرد: ${result}`
+    `🎲 نتيجة النرد: ${result} ضد ${result}`
   );
 }
 
 
 /* =========================
-   البطاقات أثناء المباراة
+   البطاقات
 ========================= */
 
 function showCards() {
@@ -624,19 +1008,7 @@ function showCards() {
     return;
   }
 
-  if (teams[1].card) {
-
-    addEvent(
-      `🃏 بطاقة ${teams[1].name}: ${teams[1].card.name}`
-    );
-  }
-
-  if (teams[2].card) {
-
-    addEvent(
-      `🃏 بطاقة ${teams[2].name}: ${teams[2].card.name}`
-    );
-  }
+  addEvent("🃏 البطاقات السرية متاحة للفريقين");
 }
 
 
@@ -687,93 +1059,154 @@ function openPenalty(team) {
 
   if (result) {
 
-    changeScore(team, 1);
+    teams[team].score++;
+
+    updateScoreboard();
 
     addEvent(
-      `👑⚽ هدف من ركلة الرئيس`
+      `👑⚽ هدف من ركلة الرئيس لـ ${teams[team].name}`
     );
 
   } else {
 
     addEvent(
-      "🧤 تصدي لركلة الرئيس"
+      "👑🧤 تصدي لركلة الرئيس"
     );
   }
 }
 
 
 /* =========================
-   البطاقة الصفراء
+   البطاقات على اللاعبين
 ========================= */
+
+function choosePlayerForCard(type) {
+
+  const allPlayers = [];
+
+  for (let team = 1; team <= 2; team++) {
+
+    teams[team].players.forEach(player => {
+
+      if (player.active) {
+
+        allPlayers.push({
+          team,
+          player
+        });
+
+      }
+
+    });
+  }
+
+  return allPlayers;
+}
+
 
 function yellowCard() {
 
-  const player =
-    prompt(
-      "اكتب اسم اللاعب الذي حصل على البطاقة الصفراء:"
-    );
+  const available =
+    choosePlayerForCard("yellow");
 
-  if (!player || !player.trim()) {
+  if (available.length === 0) {
     return;
   }
 
-  const name =
-    player.trim();
+  const names =
+    available.map((item, index) =>
+      `${index + 1} - ${item.player.name} (${teams[item.team].name})`
+    ).join("\n");
 
-  const penalty = {
-    id: Date.now(),
-    player: name,
-    type: "yellow",
-    remaining: 120
-  };
+  const choice =
+    Number(
+      prompt(
+        `اختر اللاعب:\n\n${names}`
+      )
+    );
 
-  penalties.push(penalty);
+  const selected =
+    available[choice - 1];
 
-  addEvent(
-    `🟨 بطاقة صفراء — ${name}`
+  if (!selected) {
+    return;
+  }
+
+  applyPenalty(
+    selected.team,
+    selected.player,
+    "yellow"
   );
-
-  updatePenalties();
 }
 
-
-/* =========================
-   البطاقة الحمراء
-========================= */
 
 function redCard() {
 
-  const player =
-    prompt(
-      "اكتب اسم اللاعب الذي حصل على البطاقة الحمراء:"
-    );
+  const available =
+    choosePlayerForCard("red");
 
-  if (!player || !player.trim()) {
+  if (available.length === 0) {
     return;
   }
 
-  const name =
-    player.trim();
+  const names =
+    available.map((item, index) =>
+      `${index + 1} - ${item.player.name} (${teams[item.team].name})`
+    ).join("\n");
+
+  const choice =
+    Number(
+      prompt(
+        `اختر اللاعب:\n\n${names}`
+      )
+    );
+
+  const selected =
+    available[choice - 1];
+
+  if (!selected) {
+    return;
+  }
+
+  applyPenalty(
+    selected.team,
+    selected.player,
+    "red"
+  );
+}
+
+
+function applyPenalty(team, player, type) {
+
+  const duration =
+    type === "yellow"
+      ? 120
+      : 300;
+
+  player.active = false;
+  player.penalty = type;
 
   const penalty = {
     id: Date.now(),
-    player: name,
-    type: "red",
-    remaining: 300
+    team,
+    player: player.name,
+    type,
+    remaining: duration
   };
 
   penalties.push(penalty);
 
   addEvent(
-    `🟥 بطاقة حمراء — ${name}`
+    `${type === "yellow" ? "🟨" : "🟥"} ${player.name} خرج من الملعب`
   );
 
   updatePenalties();
+  updateLivePlayers();
 }
 
 
 /* =========================
-   تحديث العقوبات
+   العقوبات
 ========================= */
 
 function updatePenalties() {
@@ -807,14 +1240,6 @@ function updatePenalties() {
         ? "penalty-item penalty-yellow"
         : "penalty-item penalty-red";
 
-    const minutes =
-      Math.floor(
-        penalty.remaining / 60
-      );
-
-    const seconds =
-      penalty.remaining % 60;
-
     item.innerHTML = `
       <div>
         ${penalty.type === "yellow" ? "🟨" : "🟥"}
@@ -822,7 +1247,7 @@ function updatePenalties() {
       </div>
 
       <div class="penalty-time">
-        ${minutes}:${String(seconds).padStart(2, "0")}
+        ${formatTime(penalty.remaining)}
       </div>
     `;
 
@@ -835,21 +1260,21 @@ function updatePenalties() {
    كرة المباراة
 ========================= */
 
-let matchball = {
-  players: 5,
-  active: false
-};
-
 function startMatchball() {
 
   matchball.active = true;
-  matchball.players = 5;
+
+  matchball.players =
+    Math.max(
+      teams[1].players.length,
+      teams[2].players.length
+    );
 
   document.getElementById("matchballPlayers").textContent =
-    "5 ضد 5";
+    `${matchball.players} ضد ${matchball.players}`;
 
   document.getElementById("matchballMessage").textContent =
-    "الفريق المتقدم يحتاج هدفًا لإنهاء المباراة.";
+    "الهدف القادم يحسم المباراة.";
 
   showScreen("matchball");
 }
@@ -857,58 +1282,15 @@ function startMatchball() {
 
 function matchballGoal(team) {
 
-  const other =
-    team === 1 ? 2 : 1;
-
-  if (
-    teams[1].score ===
-    teams[2].score
-  ) {
-
-    teams[team].score++;
-
-    updateScoreboard();
-
-    finishGame(team);
-
-    return;
-  }
-
-  const leader =
-    teams[1].score >
-    teams[2].score
-      ? 1
-      : 2;
-
-  if (team === leader) {
-
-    finishGame(team);
-
-    return;
-  }
-
   teams[team].score++;
 
   updateScoreboard();
 
-  if (
-    teams[1].score ===
-    teams[2].score
-  ) {
+  addEvent(
+    `⚽ ${teams[team].name} سجل في كرة المباراة`
+  );
 
-    document.getElementById(
-      "matchballMessage"
-    ).textContent =
-      "تعادل! الهدف القادم يحسم المباراة.";
-
-    addEvent(
-      `⚽ ${teams[team].name} عادل النتيجة`
-    );
-
-  } else {
-
-    finishGame(team);
-  }
+  finishGame(team);
 }
 
 
@@ -928,9 +1310,7 @@ function startShootouts() {
 
   updateScoreboard();
 
-  document.getElementById(
-    "shootoutTurn"
-  ).textContent =
+  document.getElementById("shootoutTurn").textContent =
     `${teams[1].name} يسدد`;
 
   showScreen("shootouts");
@@ -950,6 +1330,12 @@ function shootoutResult(scored) {
       shootout.score1++;
     }
 
+    addEvent(
+      scored
+        ? `🎯 ${teams[1].name} سجل ركلة`
+        : `❌ ${teams[1].name} أهدر الركلة`
+    );
+
     shootout.turn = 2;
 
   } else {
@@ -960,6 +1346,12 @@ function shootoutResult(scored) {
       shootout.score2++;
     }
 
+    addEvent(
+      scored
+        ? `🎯 ${teams[2].name} سجل ركلة`
+        : `❌ ${teams[2].name} أهدر الركلة`
+    );
+
     shootout.turn = 1;
   }
 
@@ -967,35 +1359,28 @@ function shootoutResult(scored) {
 
   if (
     shootout.shots1 >= 5 &&
-    shootout.shots2 >= 5
+    shootout.shots2 >= 5 &&
+    shootout.score1 !== shootout.score2
   ) {
 
-    if (
-      shootout.score1 !==
+    const winner =
+      shootout.score1 >
       shootout.score2
-    ) {
+        ? 1
+        : 2;
 
-      const winner =
-        shootout.score1 >
-        shootout.score2
-          ? 1
-          : 2;
+    finishGame(winner);
 
-      finishGame(winner);
-
-      return;
-    }
+    return;
   }
 
-  document.getElementById(
-    "shootoutTurn"
-  ).textContent =
+  document.getElementById("shootoutTurn").textContent =
     `${teams[shootout.turn].name} يسدد`;
 }
 
 
 /* =========================
-   نهاية المباراة
+   النهاية
 ========================= */
 
 function finishGame(team) {
@@ -1030,19 +1415,34 @@ setInterval(() => {
 
   });
 
+
   const finished =
     penalties.filter(
       penalty =>
         penalty.remaining <= 0
     );
 
+
   finished.forEach(penalty => {
 
+    const player =
+      teams[penalty.team].players.find(
+        p => p.name === penalty.player
+      );
+
+    if (player) {
+
+      player.active = true;
+      player.penalty = null;
+
+    }
+
     addEvent(
-      `✅ انتهت عقوبة ${penalty.player}`
+      `✅ عاد ${penalty.player} إلى الملعب`
     );
 
   });
+
 
   penalties =
     penalties.filter(
@@ -1050,6 +1450,35 @@ setInterval(() => {
         penalty.remaining > 0
     );
 
+
   updatePenalties();
+  updateLivePlayers();
 
 }, 1000);
+
+
+/* =========================
+   إغلاق النوافذ
+========================= */
+
+function closeOverlay(id) {
+
+  const overlay =
+    document.getElementById(id);
+
+  if (overlay) {
+    overlay.classList.remove("show");
+  }
+}
+
+
+/* =========================
+   البداية
+========================= */
+
+window.addEventListener("DOMContentLoaded", () => {
+
+  createPlayerInputs(1);
+  createPlayerInputs(2);
+
+});
