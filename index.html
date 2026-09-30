@@ -1,1 +1,277 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <title>Kings League</title>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <div id="app">
+
+    <section id="home" class="screen active">
+      <div class="logo">KINGS</div>
+      <h1>LEAGUE</h1>
+
+      <p>إدارة مباراة كينجز ليق</p>
+
+      <button onclick="showScreen('setup')">
+        ابدأ مباراة
+      </button>
+    </section>
+
+
+    <section id="setup" class="screen">
+
+      <h2>إعداد المباراة</h2>
+
+      <div class="input-box">
+        <label>الفريق الأول</label>
+        <input id="team1" type="text" placeholder="اسم الفريق">
+      </div>
+
+      <div class="input-box">
+        <label>رئيس الفريق الأول</label>
+        <input id="captain1" type="text" placeholder="اسم الرئيس">
+      </div>
+
+      <div class="input-box">
+        <label>الفريق الثاني</label>
+        <input id="team2" type="text" placeholder="اسم الفريق">
+      </div>
+
+      <div class="input-box">
+        <label>رئيس الفريق الثاني</label>
+        <input id="captain2" type="text" placeholder="اسم الرئيس">
+      </div>
+
+      <button onclick="startCards()">
+        متابعة
+      </button>
+
+      <button class="secondary" onclick="showScreen('home')">
+        رجوع
+      </button>
+
+    </section>
+
+
+    <section id="cards" class="screen">
+
+      <h2>اختيار البطاقة السرية</h2>
+
+      <p id="cardInstruction"></p>
+
+      <div class="cards-container">
+
+        <div class="team-card">
+          <h3 id="cardTeam1">الفريق الأول</h3>
+          <div id="cards1" class="cards"></div>
+        </div>
+
+        <div class="team-card">
+          <h3 id="cardTeam2">الفريق الثاني</h3>
+          <div id="cards2" class="cards"></div>
+        </div>
+
+      </div>
+
+      <button id="continueToMatch" onclick="startMatch()" disabled>
+        بدء المباراة
+      </button>
+
+    </section>
+
+
+    <section id="match" class="screen">
+
+      <div class="top-bar">
+        <div>
+          <span id="phase">الاستعداد</span>
+        </div>
+
+        <div>
+          <span id="timer">00:00</span>
+        </div>
+      </div>
+
+
+      <div class="scoreboard">
+
+        <div class="team-score">
+          <h2 id="matchTeam1">الفريق الأول</h2>
+
+          <div id="score1">0</div>
+
+          <div class="score-buttons">
+            <button onclick="changeScore(1, 1)">+</button>
+            <button onclick="changeScore(1, -1)">−</button>
+          </div>
+        </div>
+
+
+        <div class="vs">
+          VS
+        </div>
+
+
+        <div class="team-score">
+          <h2 id="matchTeam2">الفريق الثاني</h2>
+
+          <div id="score2">0</div>
+
+          <div class="score-buttons">
+            <button onclick="changeScore(2, 1)">+</button>
+            <button onclick="changeScore(2, -1)">−</button>
+          </div>
+        </div>
+
+      </div>
+
+
+      <div class="match-info">
+
+        <div class="info-box">
+          <span>اللاعبون</span>
+          <strong id="players">1 ضد 1</strong>
+        </div>
+
+        <div class="info-box">
+          <span>الحالة</span>
+          <strong id="status">متوقفة</strong>
+        </div>
+
+      </div>
+
+
+      <div class="controls">
+
+        <button onclick="toggleTimer()" id="timerButton">
+          ▶ تشغيل المباراة
+        </button>
+
+        <button onclick="rollDice()">
+          🎲 النرد
+        </button>
+
+        <button onclick="showCards()">
+          🃏 البطاقات
+        </button>
+
+        <button onclick="presidentPenalty()">
+          👑 ركلة الرئيس
+        </button>
+
+      </div>
+
+
+      <div class="event-log">
+
+        <h3>أحداث المباراة</h3>
+
+        <div id="events"></div>
+
+      </div>
+
+    </section>
+
+
+    <section id="matchball" class="screen">
+
+      <h2>⚽ كرة المباراة</h2>
+
+      <div class="matchball-score">
+        <div>
+          <span id="mbTeam1">الفريق الأول</span>
+          <strong id="mbScore1">0</strong>
+        </div>
+
+        <div>:</div>
+
+        <div>
+          <strong id="mbScore2">0</strong>
+          <span id="mbTeam2">الفريق الثاني</span>
+        </div>
+      </div>
+
+      <p id="matchballMessage">
+        الهدف القادم قد يحسم المباراة.
+      </p>
+
+      <button onclick="matchballGoal(1)">
+        هدف الفريق الأول
+      </button>
+
+      <button onclick="matchballGoal(2)">
+        هدف الفريق الثاني
+      </button>
+
+      <div class="info-box">
+        <span>عدد اللاعبين</span>
+        <strong id="matchballPlayers">5 ضد 5</strong>
+      </div>
+
+    </section>
+
+
+    <section id="shootouts" class="screen">
+
+      <h2>🎯 ركلات الترجيح</h2>
+
+      <div class="shootout-score">
+        <div>
+          <span id="soTeam1">الفريق الأول</span>
+          <strong id="soScore1">0</strong>
+        </div>
+
+        <div>:</div>
+
+        <div>
+          <strong id="soScore2">0</strong>
+          <span id="soTeam2">الفريق الثاني</span>
+        </div>
+      </div>
+
+      <p id="shootoutTurn">
+        الفريق الأول يسدد
+      </p>
+
+      <button onclick="shootoutResult(true)">
+        ⚽ هدف
+      </button>
+
+      <button onclick="shootoutResult(false)">
+        🧤 تصدي
+      </button>
+
+    </section>
+
+
+    <section id="final" class="screen">
+
+      <div class="final-icon">🏆</div>
+
+      <h2>انتهت المباراة</h2>
+
+      <h1 id="winner"></h1>
+
+      <div class="final-score" id="finalScore">
+        0 - 0
+      </div>
+
+      <button onclick="location.reload()">
+        مباراة جديدة
+      </button>
+
+    </section>
+
+  </div>
+
+  <script src="script.js"></script>
+
+</body>
+</html>
