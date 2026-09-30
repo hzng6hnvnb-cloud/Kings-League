@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Kings League</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background:
+        radial-gradient(circle at top, #263238, #090b0d 55%);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 500px;
+    }
+
+    .glass {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border-radius: 28px;
+      padding: 30px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.45);
+    }
+
+    .logo {
+      text-align: center;
+      font-size: 42px;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      opacity: .65;
+      margin-bottom: 30px;
+    }
+
+    .start {
+      width: 100%;
+      border: 0;
+      border-radius: 18px;
+      padding: 16px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      background: white;
+      color: black;
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="container">
+
+    <section class="glass">
+
+      <div class="logo">
+        👑 Kings League
+      </div>
+
+      <div class="subtitle">
+        دوري الملوك
+      </div>
+
+      <button class="start">
+        ابدأ مباراة
+      </button>
+
+    </section>
+
+  </main>
+
+</body>
+</html>
