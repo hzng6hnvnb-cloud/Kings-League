@@ -1,119 +1,158 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kings League</title>
 
-  <title>Kings League</title>
+<style>
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
 
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+body{
+  min-height:100vh;
+  font-family:Arial,sans-serif;
+  color:#fff;
+  background:
+    radial-gradient(circle at 50% 0%,#27313a 0%,#0b0f12 45%,#050607 100%);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:20px;
+}
 
-    body {
-      min-height: 100vh;
-      font-family: Arial, sans-serif;
-      background:
-        radial-gradient(circle at top, #252a30, #07090b 65%);
-      color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-    }
+.app{
+  width:100%;
+  max-width:520px;
+}
 
-    .app {
-      width: 100%;
-      max-width: 520px;
-    }
+.card{
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:30px;
+  padding:28px;
+  box-shadow:0 25px 80px rgba(0,0,0,.5);
+  backdrop-filter:blur(25px);
+  -webkit-backdrop-filter:blur(25px);
+}
 
-    .glass {
-      background: rgba(255,255,255,.08);
-      border: 1px solid rgba(255,255,255,.15);
-      backdrop-filter: blur(25px);
-      -webkit-backdrop-filter: blur(25px);
-      border-radius: 30px;
-      padding: 28px;
-      box-shadow: 0 20px 70px rgba(0,0,0,.5);
-    }
+.hidden{
+  display:none;
+}
 
-    .logo {
-      text-align: center;
-      font-size: 38px;
-      font-weight: 900;
-      margin-bottom: 8px;
-    }
+.logo{
+  text-align:center;
+  font-size:38px;
+  font-weight:900;
+  margin-bottom:8px;
+}
 
-    .subtitle {
-      text-align: center;
-      color: #aaa;
-      margin-bottom: 30px;
-    }
+.subtitle{
+  text-align:center;
+  color:#aeb4ba;
+  margin-bottom:28px;
+}
 
-    .section {
-      margin-bottom: 20px;
-    }
+h2{
+  font-size:19px;
+  margin-bottom:12px;
+}
 
-    .section h2 {
-      font-size: 18px;
-      margin-bottom: 12px;
-    }
+.team{
+  margin-bottom:22px;
+}
 
-    input {
-      width: 100%;
-      padding: 16px;
-      margin-bottom: 10px;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,.15);
-      background: rgba(255,255,255,.07);
-      color: white;
-      font-size: 16px;
-      outline: none;
-    }
+input{
+  width:100%;
+  padding:16px;
+  margin-bottom:10px;
+  border-radius:17px;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.07);
+  color:#fff;
+  font-size:16px;
+  outline:none;
+}
 
-    input::placeholder {
-      color: #888;
-    }
+input:focus{
+  border-color:rgba(255,255,255,.4);
+}
 
-    button {
-      width: 100%;
-      padding: 16px;
-      border: none;
-      border-radius: 17px;
-      font-size: 17px;
-      font-weight: bold;
-      cursor: pointer;
-      background: white;
-      color: black;
-      margin-top: 8px;
-    }
+input::placeholder{
+  color:#8d949a;
+}
 
-    button:active {
-      transform: scale(.98);
-    }
+button{
+  width:100%;
+  padding:16px;
+  border:0;
+  border-radius:18px;
+  background:#fff;
+  color:#000;
+  font-size:17px;
+  font-weight:800;
+  cursor:pointer;
+  margin-top:8px;
+}
 
-    .hidden {
-      display: none;
-    }
+button:active{
+  transform:scale(.98);
+}
 
-    .error {
-      color: #ff7070;
-      text-align: center;
-      margin-top: 12px;
-      display: none;
-    }
-  </style>
+.back{
+  background:rgba(255,255,255,.08);
+  color:#fff;
+  border:1px solid rgba(255,255,255,.12);
+}
+
+.error{
+  display:none;
+  color:#ff7272;
+  text-align:center;
+  margin-top:14px;
+  font-size:14px;
+}
+
+.scoreboard{
+  text-align:center;
+}
+
+.teams{
+  font-size:20px;
+  font-weight:800;
+  margin-bottom:20px;
+}
+
+.score{
+  font-size:64px;
+  font-weight:900;
+  margin:10px 0;
+}
+
+.time{
+  font-size:25px;
+  color:#ddd;
+}
+
+.status{
+  margin-top:20px;
+  padding:14px;
+  border-radius:16px;
+  background:rgba(255,255,255,.07);
+  color:#cfd4d8;
+}
+</style>
 </head>
 
 <body>
 
 <div class="app">
 
-  <!-- شاشة البداية -->
-  <div class="glass" id="home">
+  <!-- البداية -->
+  <div class="card" id="home">
 
     <div class="logo">
       👑 Kings League
@@ -123,27 +162,32 @@
       دوري الملوك
     </div>
 
-    <button onclick="showSetup()">
-      ابدأ مباراة
+    <button onclick="openSetup()">
+      ابدأ مباراة ⚽
     </button>
 
   </div>
 
 
   <!-- إعداد المباراة -->
-  <div class="glass hidden" id="setup">
+  <div class="card hidden" id="setup">
 
     <div class="logo">
       ⚽ إعداد المباراة
     </div>
 
-    <div class="section">
+    <div class="subtitle">
+      أدخل معلومات الفريقين
+    </div>
+
+    <div class="team">
+
       <h2>الفريق الأول</h2>
 
       <input
         id="team1"
         type="text"
-        placeholder="اسم الفريق"
+        placeholder="اسم الفريق الأول"
       >
 
       <input
@@ -151,16 +195,18 @@
         type="text"
         placeholder="اسم الكابتن"
       >
+
     </div>
 
 
-    <div class="section">
+    <div class="team">
+
       <h2>الفريق الثاني</h2>
 
       <input
         id="team2"
         type="text"
-        placeholder="اسم الفريق"
+        placeholder="اسم الفريق الثاني"
       >
 
       <input
@@ -168,6 +214,7 @@
         type="text"
         placeholder="اسم الكابتن"
       >
+
     </div>
 
 
@@ -175,34 +222,42 @@
       ابدأ المباراة ⚽
     </button>
 
+    <button class="back" onclick="backHome()">
+      رجوع
+    </button>
+
     <div class="error" id="error">
-      عبّ جميع الخانات أولًا
+      ⚠️ عبّ جميع الخانات أولًا
     </div>
 
   </div>
 
 
   <!-- شاشة المباراة -->
-  <div class="glass hidden" id="match">
+  <div class="card hidden" id="match">
 
     <div class="logo">
       👑 Kings League
     </div>
 
-    <div style="text-align:center; margin-top:25px;">
+    <div class="scoreboard">
 
-      <div id="matchTeams"
-           style="font-size:20px;font-weight:bold;">
+      <div class="teams" id="teams">
+        الفريق الأول ضد الفريق الثاني
       </div>
 
-      <div style="font-size:55px;font-weight:900;margin:20px 0;">
+      <div class="score">
         <span id="score1">0</span>
         -
         <span id="score2">0</span>
       </div>
 
-      <div style="font-size:25px;">
+      <div class="time">
         الدقيقة <span id="minute">0</span>
+      </div>
+
+      <div class="status">
+        المباراة جاهزة للبدء 🔥
       </div>
 
     </div>
@@ -214,7 +269,7 @@
 
 <script>
 
-function showSetup() {
+function openSetup(){
 
   document.getElementById("home").classList.add("hidden");
 
@@ -223,7 +278,16 @@ function showSetup() {
 }
 
 
-function startMatch() {
+function backHome(){
+
+  document.getElementById("setup").classList.add("hidden");
+
+  document.getElementById("home").classList.remove("hidden");
+
+}
+
+
+function startMatch(){
 
   const team1 =
     document.getElementById("team1").value.trim();
@@ -238,22 +302,22 @@ function startMatch() {
     document.getElementById("captain2").value.trim();
 
 
-  if (!team1 || !captain1 || !team2 || !captain2) {
+  if(!team1 || !captain1 || !team2 || !captain2){
 
-    document.getElementById("error").style.display = "block";
+    document.getElementById("error").style.display="block";
 
     return;
   }
 
 
-  document.getElementById("error").style.display = "none";
+  document.getElementById("error").style.display="none";
 
   document.getElementById("setup").classList.add("hidden");
 
   document.getElementById("match").classList.remove("hidden");
 
 
-  document.getElementById("matchTeams").innerHTML =
+  document.getElementById("teams").innerHTML =
     team1 + " 👑 " + captain1 +
     "<br><br>" +
     team2 + " 👑 " + captain2;
