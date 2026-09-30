@@ -81,7 +81,7 @@
         دوري الملوك
       </div>
 
-      <button class="start">
+<button class="start">
         ابدأ مباراة
       </button>
 
@@ -91,3 +91,8 @@
 
 </body>
 </html>
+<script>
+  document.querySelector(".start").addEventListener("click", function () {
+    alert("تم بدء إعداد المباراة 👑");
+  });
+</script>
